@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>二进制珍珠盒 · 数制转换模拟</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(145deg, #1e3c4f 0%, #2a4e62 100%);
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .game-container {
+      background: #f7f3e6;
+      border-radius: 60px 60px 40px 40px;
+      padding: 30px 40px 40px;
+      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.5), inset 0 2px 5px rgba(255, 255, 200, 0.6);
+      border-bottom: 8px solid #b9a78b;
+      max-width: 1300px;
+      width: fit-content;
+    }
+    h1 {
+      text-align: center;
+      margin: 0 0 10px 0;
+      font-weight: 500;
+      font-size: 2.2rem;
+      color: #1e2f3a;
+      text-shadow: 2px 2px 0 #c9b99b;
+      letter-spacing: 2px;
+    }
+    /* 副标题：微软雅黑，不倾斜 */
+    .sub {
+      text-align: center;
+      margin: -5px 0 20px 0;
+      color: #3b5a6b;
+      font-style: normal;
+      font-weight: 500;
+      font-size: 1.1rem;
+      font-family: 'Microsoft YaHei', '微软雅黑', 'Segoe UI', Roboto, sans-serif;
+    }
+    .boxes-area {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: flex-end;
+      flex-wrap: nowrap;
+      padding: 15px 5px;
+      overflow-x: auto;
+      overflow-y: visible;
+      max-width: 100%;
+      scrollbar-width: thin;
+    }
+    .boxes-area::-webkit-scrollbar {
+      height: 6px;
+    }
+    .boxes-area::-webkit-scrollbar-thumb {
+      background: #b9a78b;
+      border-radius: 10px;
+    }
+    .box-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 140px;
+      flex-shrink: 0;
+    }
+    .weight-label {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #2d4b5c;
+      background: #dfd7c4;
+      padding: 6px 0;
+      width: 100%;
+      text-align: center;
+      border-radius: 20px 20px 0 0;
+      border: 2px solid #b9a78b;
+      border-bottom: none;
+      letter-spacing: 0.5px;
+    }
+    .box {
+      width: 130px;
+      height: 260px;
+      background: #8b6f4c;
+      background-image: radial-gradient(circle at 20% 30%, #b38e62, #5e4128);
+      border-radius: 12px 12px 20px 20px;
+      box-shadow: inset 0 0 0 3px #4a3321, 0 10px 0 #3d2b1b;
+      border: 2px solid #2d1f12;
+      position: relative;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 8px 4px;
+      transition: box-shadow 0.1s;
+      cursor: pointer;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .box::-webkit-scrollbar {
+      width: 5px;
+    }
+    .box::-webkit-scrollbar-thumb {
+      background: #b38b5b;
+      border-radius: 10px;
+    }
+    .box:hover {
+      box-shadow: inset 0 0 0 3px #4a3321, 0 10px 0 #3d2b1b, 0 0 0 3px #ffd966;
+    }
+    .pearls-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-end;
+      width: 100%;
+      gap: 3px;
+      padding: 2px 0;
+    }
+    .pearl {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fff9e6, #e8d9b0, #b99e6b);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 6px #fff3d1;
+      flex-shrink: 0;
+      border: 1px solid #b38b5b;
+      animation: drop 0.15s ease-out;
+    }
+    @keyframes drop {
+      0% { transform: translateY(-30px) scale(0.8); opacity: 0.6; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .bit-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #1a2b36;
+      background: #c9b99b;
+      width: 100%;
+      text-align: center;
+      border-radius: 0 0 16px 16px;
+      padding: 6px 0;
+      border: 2px solid #b9a78b;
+      border-top: none;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+      transition: background 0.2s;
+    }
+    .bit-value.active {
+      background: #f3d37c;
+      color: #1e3c4f;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin: 25px 0 10px;
+      padding: 12px 20px;
+      background: #e4dbc9;
+      border-radius: 60px;
+      border: 3px solid #b9a78b;
+      box-shadow: inset 0 2px 8px rgba(120, 90, 50, 0.2);
+    }
+    .decimal-input-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f2ead9;
+      padding: 5px 15px 5px 20px;
+      border-radius: 40px;
+      border: 2px solid #b9a78b;
+      box-shadow: inset 0 1px 5px #c2b29a;
+    }
+    .decimal-input-area label {
+      font-weight: 600;
+      color: #2d4b5c;
+      font-size: 1rem;
+      white-space: nowrap;
+    }
+    #decimalInput {
+      width: 90px;
+      padding: 10px 12px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      text-align: center;
+      border: 2px solid #8b6f4c;
+      border-radius: 30px;
+      background: #fffcf0;
+      color: #1e2f3a;
+      outline: none;
+      font-family: 'Courier New', monospace;
+    }
+    #decimalInput:focus {
+      border-color: #d4a373;
+      box-shadow: 0 0 0 3px #f3d37c;
+    }
+    .btn {
+      background: #4a6a7c;
+      border: none;
+      color: white;
+      font-weight: 600;
+      font-size: 1.1rem;
+      padding: 10px 22px;
+      border-radius: 40px;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #1f333f, 0 6px 12px rgba(0,0,0,0.3);
+      transition: 0.07s ease;
+      letter-spacing: 0.5px;
+      border: 1px solid #7f9aa8;
+      white-space: nowrap;
+    }
+    .btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 1px 0 #1f333f, 0 6px 12px rgba(0,0,0,0.2);
+    }
+    .btn.reset-btn {
+      background: #8b6f4c;
+      box-shadow: 0 5px 0 #4a3321, 0 6px 12px rgba(0,0,0,0.3);
+      border-color: #b38b5b;
+    }
+    .btn.check-btn {
+      background: #3f7e5c;
+      box-shadow: 0 5px 0 #1f4a33, 0 6px 12px rgba(0,0,0,0.3);
+      border-color: #6baa85;
+    }
+    .message-box {
+      min-height: 50px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #1e2f3a;
+      text-align: center;
+      padding: 8px 16px;
+      margin-top: 10px;
+      background: #ede6d8;
+      border-radius: 30px;
+      border-left: 8px solid #a58e6f;
+      border-right: 8px solid #a58e6f;
+      width: 100%;
+      max-width: 933px;   /* 700 * 4/3 ≈ 933，增加三分之一 */
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .success {
+      color: #1f6d3c;
+      background: #d4edc9;
+      border-left-color: #2e7d4e;
+      border-right-color: #2e7d4e;
+    }
+    .error {
+      color: #a12d2d;
+      background: #f8d7d7;
+      border-left-color: #b33a3a;
+      border-right-color: #b33a3a;
+    }
+    @media (max-width: 950px) {
+      .game-container {
+        padding: 20px 15px 30px;
+      }
+      .box-wrapper {
+        width: 115px;
+      }
+      .box {
+        width: 105px;
+        height: 230px;
+      }
+      .pearl {
+        width: 16px;
+        height: 16px;
+      }
+      .weight-label {
+        font-size: 0.9rem;
+      }
+      .bit-value {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="game-container">
+  <h1>🐚 二进制珍珠盒</h1>
+  <div class="sub">点击盒子装满或清空，盒子有珍珠记为1，没有珍珠记为0</div>
+
+  <!-- 6个盒子 排成一排 -->
+  <div class="boxes-area" id="boxesArea">
+    <div class="box-wrapper" data-weight="32">
+      <div class="weight-label">32</div>
+      <div class="box" id="box32"></div>
+      <div class="bit-value" id="bit32">0</div>
+    </div>
+    <div class="box-wrapper" data-weight="16">
+      <div class="weight-label">16</div>
+      <div class="box" id="box16"></div>
+      <div class="bit-value" id="bit16">0</div>
+    </div>
+    <div class="box-wrapper" data-weight="8">
+      <div class="weight-label">8</div>
+      <div class="box" id="box8"></div>
+      <div class="bit-value" id="bit8">0</div>
+    </div>
+    <div class="box-wrapper" data-weight="4">
+      <div class="weight-label">4</div>
+      <div class="box" id="box4"></div>
+      <div class="bit-value" id="bit4">0</div>
+    </div>
+    <div class="box-wrapper" data-weight="2">
+      <div class="weight-label">2</div>
+      <div class="box" id="box2"></div>
+      <div class="bit-value" id="bit2">0</div>
+    </div>
+    <div class="box-wrapper" data-weight="1">
+      <div class="weight-label">1</div>
+      <div class="box" id="box1"></div>
+      <div class="bit-value" id="bit1">0</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="decimal-input-area">
+      <label for="decimalInput">放入盒子的数量</label>
+      <input type="number" id="decimalInput" min="0" max="63" value="0" step="1">
+    </div>
+    <button class="btn" id="convertBtn">⚡ 放入珍珠 (转二进制)</button>
+    <button class="btn reset-btn" id="resetBtn">🧹 全部取出</button>
+    <button class="btn check-btn" id="checkBtn">✓ 检查正确</button>
+  </div>
+
+  <div id="messageBox" class="message-box">请输入放进盒子的珍珠个数</div>
+</div>
+
+<script>
+  (function() {
+    // 盒子配置：权重序列，同时也是容量
+    const weights = [32, 16, 8, 4, 2, 1];
+    const boxElements = new Map();
+    const bitElements = new Map();
+    // 每个盒子中当前珍珠数量 (0 或 容量)
+    const pearlsCount = new Map();
+
+    // 初始化
+    weights.forEach(w => {
+      const boxId = 'box' + w;
+      const bitId = 'bit' + w;
+      const boxEl = document.getElementById(boxId);
+      const bitEl = document.getElementById(bitId);
+      if (!boxEl || !bitEl) return;
+      boxElements.set(w, boxEl);
+      bitElements.set(w, bitEl);
+      pearlsCount.set(w, 0); // 初始空
+    });
+
+    const messageBox = document.getElementById('messageBox');
+    const decimalInput = document.getElementById('decimalInput');
+
+    // ---- 辅助函数 ----
+    // 更新盒子视觉：根据数量生成珍珠，每层5颗
+    function updateBoxVisual(weight) {
+      const boxEl = boxElements.get(weight);
+      const bitEl = bitElements.get(weight);
+      const count = pearlsCount.get(weight) || 0;
+
+      if (!boxEl || !bitEl) return;
+
+      boxEl.innerHTML = '';
+
+      const container = document.createElement('div');
+      container.className = 'pearls-container';
+
+      // 添加珍珠，每层5颗由flex-wrap自动实现
+      for (let i = 0; i < count; i++) {
+        const pearl = document.createElement('div');
+        pearl.className = 'pearl';
+        container.appendChild(pearl);
+      }
+
+      boxEl.appendChild(container);
+
+      // 更新bit值
+      if (count > 0) {
+        bitEl.textContent = '1';
+        bitEl.classList.add('active');
+      } else {
+        bitEl.textContent = '0';
+        bitEl.classList.remove('active');
+      }
+
+      // 滚动到底部显示最新珍珠
+      boxEl.scrollTop = boxEl.scrollHeight;
+    }
+
+    function renderAllBoxes() {
+      weights.forEach(w => updateBoxVisual(w));
+    }
+
+    function computeTotalPearls() {
+      let sum = 0;
+      weights.forEach(w => sum += pearlsCount.get(w) || 0);
+      return sum;
+    }
+
+    // 根据十进制数设置珍珠：每个盒子只能放满或清空
+    function setTotalToState(total) {
+      let num = Number(total);
+      if (isNaN(num) || num < 0 || num > 63) {
+        setMessage('⚠️ 请输入 0 到 63 之间的整数', true, false);
+        return false;
+      }
+      num = Math.floor(num);
+      if (num !== Number(total)) {
+        decimalInput.value = num;
+        setMessage('⚠️ 已自动取整为 ' + num, true, false);
+      }
+
+      // 重置所有盒子
+      weights.forEach(w => pearlsCount.set(w, 0));
+
+      // 贪心算法：从大到小，能放满就放满
+      let remaining = num;
+      for (let w of weights) {
+        if (remaining >= w) {
+          pearlsCount.set(w, w);  // 放满
+          remaining -= w;
+        }
+        // 否则不放
+      }
+
+      renderAllBoxes();
+      if (Number(decimalInput.value) !== num) {
+        decimalInput.value = num;
+      }
+      return true;
+    }
+
+    function setMessage(text, isError = false, isSuccess = false) {
+      messageBox.textContent = text;
+      messageBox.classList.remove('error', 'success');
+      if (isError) messageBox.classList.add('error');
+      if (isSuccess) messageBox.classList.add('success');
+    }
+
+    // ---- 点击盒子：如果空则放满，如果满则清空 ----
+    function handleBoxClick(weight) {
+      const currentCount = pearlsCount.get(weight) || 0;
+      const maxCapacity = weight;
+
+      let newCount;
+      if (currentCount === 0) {
+        newCount = maxCapacity;  // 空 -> 放满
+      } else {
+        newCount = 0;            // 满 -> 清空
+      }
+
+      pearlsCount.set(weight, newCount);
+      updateBoxVisual(weight);
+
+      const total = computeTotalPearls();
+      decimalInput.value = total;
+
+      setMessage(`盒子 ${weight} 现在有 ${newCount} 颗珍珠 · 总数: ${total}`, false, false);
+    }
+
+    weights.forEach(w => {
+      const boxEl = boxElements.get(w);
+      if (boxEl) {
+        boxEl.addEventListener('click', () => handleBoxClick(w));
+      }
+    });
+
+    // ---- 按钮：根据输入数量自动分配 ----
+    document.getElementById('convertBtn').addEventListener('click', () => {
+      const rawValue = decimalInput.value.trim();
+      if (rawValue === '') {
+        setMessage('请输入一个数量 (0~63)', true, false);
+        return;
+      }
+      const num = Number(rawValue);
+      if (isNaN(num) || !Number.isInteger(num) || num < 0 || num > 63) {
+        setMessage('❌ 请输入 0~63 之间的整数', true, false);
+        return;
+      }
+      const success = setTotalToState(num);
+      if (success) {
+        // 生成二进制表示：盒子有珍珠=1，无=0
+        const binStr = weights.map(w => (pearlsCount.get(w) || 0) > 0 ? '1' : '0').join('');
+        setMessage(`✅ 总共 ${num} 颗珍珠 · 二进制表示 ${binStr}`, false, true);
+      }
+    });
+
+    // ---- 重置 ----
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      weights.forEach(w => pearlsCount.set(w, 0));
+      renderAllBoxes();
+      decimalInput.value = '0';
+      setMessage('所有珍珠已取出 · 总数 0', false, false);
+    });
+
+    // ---- 检查正确 ----
+    document.getElementById('checkBtn').addEventListener('click', () => {
+      const currentTotal = computeTotalPearls();
+      const inputTotal = Number(decimalInput.value.trim());
+
+      if (isNaN(inputTotal) || !Number.isInteger(inputTotal) || inputTotal < 0 || inputTotal > 63) {
+        setMessage('⚠️ 输入框中的数量无效 (应为0~63整数)', true, false);
+        return;
+      }
+
+      const binStr = weights.map(w => (pearlsCount.get(w) || 0) > 0 ? '1' : '0').join('');
+
+      if (currentTotal === inputTotal) {
+        setMessage(`🎉 正确！珍珠总数 ${currentTotal} (二进制 ${binStr})`, false, true);
+      } else {
+        setMessage(`❌ 珍珠总数是 ${currentTotal}，但输入框是 ${inputTotal}，不匹配。`, true, false);
+      }
+    });
+
+    decimalInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('convertBtn').click();
+      }
+    });
+
+    // 初始化
+    weights.forEach(w => pearlsCount.set(w, 0));
+    renderAllBoxes();
+    decimalInput.value = '0';
+    setMessage('请输入放进盒子的珍珠个数', false, false);
+  })();
+</script>
+</body>
+</html>
